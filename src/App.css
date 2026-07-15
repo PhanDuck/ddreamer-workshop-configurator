@@ -1,0 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap');
+
+:root {
+  --heading-font: 'Playfair Display', serif;
+  --body-font: 'Lato', sans-serif;
+  --primary-pink: #e69a9d; /* Màu hồng giống web gốc */
+  --dark-text: #2c2c2c;
+  --light-bg: #FDF2F8;
+}
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  font-family: var(--body-font);
+  background-color: #fafafa;
+  color: var(--dark-text);
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--heading-font) !important;
+  color: var(--dark-text);
+  margin: 0;
+}
+
+.heading-pink {
+  color: var(--primary-pink) !important;
+}
+
+/* Override Ant Design Fonts */
+button, .ant-radio-button, .ant-typography, input, .ant-modal, .ant-btn {
+  font-family: var(--body-font) !important;
+}
+
+/* Tùy chỉnh thanh cuộn cho mượt mà */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f1f1; 
+}
+::-webkit-scrollbar-thumb {
+  background: var(--primary-pink); 
+  border-radius: 10px;
+}
