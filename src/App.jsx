@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Torus, Text, Environment, ContactShadows } from '@react-three/drei';
-import { Input, Button, Rate, DatePicker, Slider, Modal, Row, Col, Card, Typography, Avatar, Space, Divider, Collapse } from 'antd';
+import { Input, Button, Rate, DatePicker, Slider, Modal, Row, Col, Card, Typography, Avatar, Space, Divider, Collapse, Tag } from 'antd';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   MessageCircle, 
@@ -19,7 +19,9 @@ import {
   HeartHandshake,
   Star as StarIcon,
   Users,
-  ArrowDownCircle 
+  ArrowDownCircle,
+  Camera,
+  Heart
 } from 'lucide-react';
 import { GoogleOutlined, FacebookFilled, InstagramFilled, BookOutlined, IdcardOutlined } from '@ant-design/icons';
 import 'antd/dist/reset.css';
@@ -52,6 +54,16 @@ const journeyTimes = {
   gemstone: { design: '20 mins', craft: '3 hours', polish: '20 mins', total: '3 hours 40 mins' }, 
   star: { design: '20 mins', craft: '3 hours', polish: '20 mins', total: '3 hours 40 mins' }
 };
+
+const passportDetails = [
+  { icon: <CalendarIcon size={16} />, label: "Date of workshop", value: "12.05.24" },
+  { icon: <Gem size={16} />, label: "Piece made", value: "Silver Rings" },
+  { icon: <Sparkles size={16} />, label: "Material", value: "925 Silver" },
+  { icon: <ShieldCheck size={16} />, label: "Technique learned", value: "Hammered & Texture" },
+  { icon: <HeartHandshake size={16} />, label: "Meaning", value: "Promise & Partnership" },
+  { icon: <Users size={16} />, label: "Artisan / Helper", value: "Linh" },
+  { icon: <Camera size={16} />, label: "Photo album", value: "ddreamer.com/memory" },
+];
 
 // ==========================================
 // HIỆU ỨNG BẮN PHÁO HOA TOÀN MÀN HÌNH
@@ -163,13 +175,10 @@ const Ring = ({ engravingText, material, finish, positionType, fontSize, ringSty
       case 'hammered':
         return <Torus args={[1, 0.045, 8, 24]} scale={[1, 1, 8]}>{hammeredMat}</Torus>;
       case 'gemstone':
-        // Đổi model Gemstone sang dạng mặt cắt Kim cương (Octahedron) ổn định hơn, không bị lỗi tàng hình
         return (
           <group>
             <Torus args={[1, 0.045, 64, 128]} scale={[1, 1, 8]}>{baseMat}</Torus>
-            {/* Chấu giữ */}
             <mesh position={[0, 1.05, 0]}><cylinderGeometry args={[0.15, 0.1, 0.15, 32]} />{baseMat}</mesh>
-            {/* Đá cắt giác kim cương */}
             <mesh position={[0, 1.25, 0]}>
               <octahedronGeometry args={[0.22, 0]} />
               <meshPhysicalMaterial color={material === 'gold' ? '#ffffff' : '#e0fbfc'} roughness={0.1} metalness={0.5} clearcoat={1} />
@@ -195,7 +204,6 @@ const Ring = ({ engravingText, material, finish, positionType, fontSize, ringSty
 
   return (
     <group rotation={ringStyle === 'flat' ? [-Math.PI / 2, 0, Math.PI / 4] : [-Math.PI / 2, 0, 0]}>
-      {/* Khóa key={ringStyle} ép Threejs render mới lại toàn bộ, khắc phục dứt điểm 100% lỗi mất hình */}
       <group key={ringStyle}>
         {renderGeometry()}
       </group>
@@ -418,7 +426,7 @@ export default function App() {
       </div>
 
       {/* ========================================== */}
-      {/* 3D CONFIGURATOR KHU VỰC THIẾT KẾ NHẪN (1 MÀN HÌNH) */}
+      {/* 3D CONFIGURATOR KHU VỰC THIẾT KẾ NHẪN */}
       {/* ========================================== */}
       <motion.section
         id="configurator-section"
@@ -513,7 +521,6 @@ export default function App() {
 
             <Divider style={{ margin: '8px 0' }} />
 
-            {/* FORM ĐẶT LỊCH GOM GỌN CHUNG 1 BẢNG CHỨ KHÔNG ĐỂ DƯỚI NỮA */}
             <Row gutter={12} style={{ marginBottom: '16px' }}>
               <Col span={9}>
                 <AntText strong style={{ display: 'block', marginBottom: '6px', color: '#888', letterSpacing: '1px', textTransform: 'uppercase', fontSize: '0.75rem', fontFamily: 'Lato' }}>Select Date</AntText>
@@ -558,40 +565,118 @@ export default function App() {
       </motion.section>
 
       {/* ========================================== */}
-      {/* POST-WORKSHOP PACKAGE SECTION (DÙNG ICON ANT DESIGN) */}
+      {/* POST-WORKSHOP PACKAGE SECTION - COMPACT SIZE */}
       {/* ========================================== */}
       <motion.section
         initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={sectionVariants}
-        style={{ maxWidth: '1200px', margin: '0 auto 100px auto', padding: '0 5%', textAlign: 'center' }}
+        style={{ maxWidth: '1400px', margin: '0 auto 60px auto', padding: '0 3%' }}
       >
-        <Title level={2} style={{ fontSize: '3rem', marginBottom: '10px', color: '#2c2c2c', fontFamily: 'Playfair Display, serif' }}>
-          Post-workshop <span style={{ color: '#e69a9d', fontStyle: 'italic' }}>Package</span>
-        </Title>
-        <Paragraph style={{ fontSize: '1.2rem', color: '#666', marginBottom: '40px', fontFamily: 'Lato, sans-serif' }}>
-          Every piece creates a story and We are the memory-keeper.
-        </Paragraph>
-
-        <Row gutter={[30, 30]} justify="center">
-          <Col xs={24} md={12}>
-            <div style={{ background: '#fff', borderRadius: '24px', padding: '40px 20px', boxShadow: '0 10px 30px rgba(0,0,0,0.04)', border: '1px solid #f0f0f0', height: '100%' }}>
-              <div style={{ marginBottom: '20px' }}>
-                <BookOutlined style={{ fontSize: '48px', color: '#880e4f' }} />
+        <Row gutter={[20, 20]} align="stretch" style={{ height: '100%', display: 'flex' }}>
+          
+          {/* LEFT CARD: YOUR CRAFT PASSPORT */}
+          <Col xs={24} lg={14} style={{ display: 'flex' }}>
+            <div style={{ background: '#392A57', borderRadius: '24px', padding: '30px 24px', width: '100%', color: '#fff', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
+                <Title level={3} style={{ color: '#fff', margin: 0, fontFamily: 'Playfair Display, serif', fontSize: '1.6rem' }}>Your Craft Passport</Title>
+                <Tag color="transparent" style={{ border: '1px solid #D2B48C', color: '#D2B48C', borderRadius: '12px', padding: '0px 8px', fontSize: '0.7rem', fontWeight: 'bold' }}>NEW</Tag>
               </div>
-              <Title level={4} style={{ color: '#880e4f', fontFamily: 'Playfair Display, serif' }}>D-Dreamer Story Passport</Title>
-              <Paragraph style={{ color: '#666', fontSize: '1.05rem', fontFamily: 'Lato, sans-serif' }}>
-                Document your creative journey. A personalized booklet to keep your workshop memories alive.
+              <Paragraph style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.95rem', fontFamily: 'Lato, sans-serif', marginBottom: '20px' }}>
+                A keepsake of your creation journey.
               </Paragraph>
+
+              <Row gutter={[20, 20]} align="middle">
+                {/* Mockup Sổ & Điện thoại bằng CSS */}
+                <Col xs={24} md={11} style={{ display: 'flex', justifyContent: 'center', position: 'relative', height: '220px' }}>
+                  
+                  {/* Sổ Passport (Đã nghiêng nhẹ qua trái) */}
+                  <div style={{ position: 'absolute', left: '2%', top: '15%', width: '120px', height: '170px', background: 'linear-gradient(135deg, #2A1F40 0%, #1A112A 100%)', borderRadius: '6px 12px 12px 6px', boxShadow: '8px 8px 15px rgba(0,0,0,0.3), inset -2px 0 5px rgba(0,0,0,0.2)', padding: '15px 10px', textAlign: 'center', borderLeft: '3px solid #110B1C', zIndex: 1, transform: 'rotate(-8deg)' }}>
+                    <AntText style={{ color: '#D2B48C', fontSize: '0.6rem', letterSpacing: '1px', display: 'block', marginBottom: '20px', fontFamily: 'Lato, sans-serif' }}>DDREAMER</AntText>
+                    {/* Đã tăng khoảng cách dòng (lineHeight) để chữ không dính nhau */}
+                    <Title level={5} style={{ color: '#D2B48C', fontFamily: 'Playfair Display, serif', margin: 0, lineHeight: 1.4, fontSize: '1.05rem', marginBottom: '10px' }}>CRAFT<br/>PASSPORT</Title>
+                    <AntText style={{ color: 'rgba(210,180,140,0.6)', fontSize: '0.45rem', letterSpacing: '1px', display: 'block', marginTop: '5px' }}>YOUR STORY . MADE BY YOU</AntText>
+                    <div style={{ position: 'absolute', bottom: '15px', left: '50%', transform: 'translateX(-50%)', width: '24px', height: '24px', border: '1px solid #D2B48C', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D2B48C', fontSize: '0.85rem', fontFamily: 'Playfair Display, serif' }}>D</div>
+                  </div>
+
+                  {/* Điện thoại */}
+                  <div style={{ position: 'absolute', right: '5%', top: '0', width: '125px', height: '240px', background: '#F4F0E6', borderRadius: '16px', border: '3px solid #C4A484', boxShadow: '12px 12px 25px rgba(0,0,0,0.4)', padding: '8px', zIndex: 2, display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ width: '30px', height: '8px', background: '#333', borderRadius: '8px', margin: '0 auto 8px' }} />
+                    <div style={{ background: '#fff', flex: 1, borderRadius: '8px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                      <div style={{ background: '#392A57', color: '#fff', padding: '8px', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <ChevronLeft size={12} /> My Passport
+                      </div>
+                      <div style={{ padding: '8px', flex: 1 }}>
+                        <div style={{ width: '100%', height: '60px', borderRadius: '6px', marginBottom: '8px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <img src="https://ddreamerjewelry.com/wp-content/uploads/2024/09/Ddreamer-Jewelry-ShowCase-Gold-10k-ammer-Texture-earrings-6-300x300.jpg" alt="Craft Passport Item" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        </div>
+                        <AntText strong style={{ fontSize: '0.7rem', display: 'block', fontFamily: 'Lato, sans-serif' }}>Silver Rings Workshop</AntText>
+                        <AntText type="secondary" style={{ fontSize: '0.6rem' }}>12.05.24 • Hanoi</AntText>
+                      </div>
+                    </div>
+                  </div>
+                </Col>
+
+                {/* Details List */}
+                <Col xs={24} md={13}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {passportDetails.map((item, index) => (
+                      <div key={index} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', borderBottom: index !== passportDetails.length - 1 ? '1px solid rgba(255,255,255,0.1)' : 'none', paddingBottom: index !== passportDetails.length - 1 ? '8px' : '0' }}>
+                        <div style={{ color: 'rgba(255,255,255,0.6)', marginTop: '2px' }}>{item.icon}</div>
+                        <div>
+                          <AntText style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.75rem', display: 'block', fontFamily: 'Lato, sans-serif', lineHeight: 1 }}>{item.label}</AntText>
+                          <AntText strong style={{ color: '#fff', fontSize: '0.85rem', fontFamily: 'Lato, sans-serif' }}>{item.value}</AntText>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <Button 
+                    size="middle" ghost 
+                    style={{ marginTop: '16px', borderColor: 'rgba(255,255,255,0.5)', color: '#fff', borderRadius: '20px', padding: '0 24px', fontFamily: 'Lato, sans-serif' }}
+                  >
+                    View my passport
+                  </Button>
+                </Col>
+              </Row>
             </div>
           </Col>
-          <Col xs={24} md={12}>
-            <div style={{ background: '#FDF2F8', borderRadius: '24px', padding: '40px 20px', boxShadow: '0 10px 30px rgba(230,154,157,0.1)', border: '1px solid rgba(230,154,157,0.3)', height: '100%' }}>
-              <div style={{ marginBottom: '20px' }}>
-                <IdcardOutlined style={{ fontSize: '48px', color: '#880e4f' }} />
+
+          {/* RIGHT CARD: SHARE YOUR STORY */}
+          <Col xs={24} lg={10} style={{ display: 'flex' }}>
+            <div style={{ background: '#fff', borderRadius: '24px', padding: '30px 24px', width: '100%', boxShadow: '0 15px 35px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', border: '1px solid #f0f0f0', justifyContent: 'center' }}>
+              <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+                <Title level={3} style={{ color: '#392A57', margin: 0, fontFamily: 'Playfair Display, serif', fontSize: '1.6rem' }}>Share your story</Title>
+                <Heart size={20} color="#392A57" />
               </div>
-              <Title level={4} style={{ color: '#880e4f', fontFamily: 'Playfair Display, serif' }}>DDreamers Club Card</Title>
-              <Paragraph style={{ color: '#666', fontSize: '1.05rem', fontFamily: 'Lato, sans-serif' }}>
-                Unlock exclusive perks, lifetime warranty, and special discounts for your next visits.
+              <Paragraph style={{ color: '#666', fontSize: '0.95rem', fontFamily: 'Lato, sans-serif', marginBottom: '20px', alignSelf: 'flex-start' }}>
+                Your story can inspire someone else.
               </Paragraph>
+
+              {/* Polaroid Images Mockup - Đã tinh chỉnh lại tọa độ cho giống ảnh mẫu */}
+              <div style={{ position: 'relative', width: '100%', height: '180px', marginBottom: '20px' }}>
+                {/* Ảnh Trái: Hơi lệch trái, nằm ngang hàng với ảnh phải */}
+                <img src="https://ddreamerjewelry.com/wp-content/uploads/2024/09/Ddreamer-Jewelry-ShowCase-Star-Signet-Ring-Baggette-Moissanites-Gold-18k-2.jpg" alt="Showcase 1" style={{ position: 'absolute', left: '2%', top: '35px', width: '105px', height: '125px', objectFit: 'cover', border: '4px solid #fff', borderRadius: '4px', boxShadow: '0 8px 16px rgba(0,0,0,0.15)', transform: 'rotate(-10deg)', zIndex: 1 }} />
+                
+                {/* Ảnh Giữa: Nằm cao nhất, ở phía trên so với 2 ảnh kia */}
+                <img src="https://ddreamerjewelry.com/wp-content/uploads/2024/09/Ddreamer-Jewelry-ShowCase-Gold-10k-ammer-Texture-earrings-3.jpg" alt="Showcase 2" style={{ position: 'absolute', left: '33%', top: '5px', width: '115px', height: '135px', objectFit: 'cover', border: '5px solid #fff', borderRadius: '4px', boxShadow: '0 10px 20px rgba(0,0,0,0.2)', transform: 'rotate(-2deg)', zIndex: 3 }} />
+                
+                {/* Ảnh Phải: Hơi lệch phải */}
+                <img src="https://ddreamerjewelry.com/wp-content/uploads/2024/09/Ddreamer-Jewelry-ShowCase-Timeless-Love-Silver-Moissanite-Anniversary-Ring-7.jpg" alt="Showcase 3" style={{ position: 'absolute', right: '2%', top: '30px', width: '105px', height: '125px', objectFit: 'cover', border: '4px solid #fff', borderRadius: '4px', boxShadow: '0 8px 16px rgba(0,0,0,0.15)', transform: 'rotate(8deg)', zIndex: 2 }} />
+              </div>
+
+              <Paragraph style={{ color: '#555', fontSize: '0.95rem', fontFamily: 'Lato, sans-serif', marginBottom: '15px', maxWidth: '85%' }}>
+                Tag us and join a community of dreamers who create with heart.
+              </Paragraph>
+              
+              <Title level={4} style={{ color: '#392A57', fontFamily: 'Playfair Display, serif', fontStyle: 'italic', fontSize: '1.5rem', marginBottom: '20px' }}>
+                #DDreamerStories
+              </Title>
+
+              <Button 
+                type="primary" icon={<InstagramFilled />}
+                style={{ background: '#392A57', color: '#fff', border: 'none', borderRadius: '20px', padding: '0 30px', height: '44px', fontSize: '0.95rem', fontFamily: 'Lato, sans-serif', fontWeight: '500' }}
+              >
+                Share with #DDreamerStories
+              </Button>
             </div>
           </Col>
         </Row>
@@ -698,7 +783,7 @@ export default function App() {
         </div>
       </motion.section>
 
-      {/* POPUP NẰM NGANG VÀ NÚT BÊN PHẢI */}
+      {/* POPUP XÁC NHẬN */}
       <Modal
         title={null} open={isModalOpen} onCancel={() => setIsModalOpen(false)} footer={null} width={700} centered closeIcon={false}
         styles={{ body: { padding: 0, borderRadius: '24px', overflow: 'hidden' } }}
