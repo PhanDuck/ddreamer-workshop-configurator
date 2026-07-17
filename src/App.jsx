@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Torus, Text, Environment, ContactShadows, Sphere } from '@react-three/drei';
+import { OrbitControls, Torus, Text, Environment, ContactShadows } from '@react-three/drei';
 import { Input, Button, Rate, DatePicker, Slider, Modal, Row, Col, Card, Typography, Avatar, Space, Divider, Collapse } from 'antd';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -18,9 +18,10 @@ import {
   Gem,
   HeartHandshake,
   Star as StarIcon,
-  Users
+  Users,
+  ArrowDownCircle 
 } from 'lucide-react';
-import { GoogleOutlined, FacebookFilled, InstagramFilled } from '@ant-design/icons';
+import { GoogleOutlined, FacebookFilled, InstagramFilled, BookOutlined, IdcardOutlined } from '@ant-design/icons';
 import 'antd/dist/reset.css';
 import logoImg from './assets/Ddreamer-Jewelry-Ddreamer-Studio-1.png';
 
@@ -81,8 +82,18 @@ const Fireworks = () => {
 };
 
 // ==========================================
-// 3D COMPONENTS (CẬP NHẬT CÁC MẪU WORKSHOP MỚI NHẤT)
+// 3D COMPONENTS
 // ==========================================
+const globalStarShape = new THREE.Shape();
+const outerRadius = 0.35;
+const innerRadius = 0.15;
+for (let i = 0; i < 10; i++) {
+  const r = i % 2 === 0 ? outerRadius : innerRadius;
+  const a = (i / 10) * Math.PI * 2 + Math.PI / 2;
+  if (i === 0) globalStarShape.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+  else globalStarShape.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+}
+
 const CurvedEngraving = ({ text, material, finish, positionType, fontSize, ringStyle }) => {
   const getTextColor = () => {
     if (finish === 'smooth') return material === 'gold' ? '#FFFDD0' : '#FFFFFF';
@@ -108,7 +119,6 @@ const CurvedEngraving = ({ text, material, finish, positionType, fontSize, ringS
     const direction = isInside ? -1 : 1;
     const totalArc = (letters.length - 1) * arcSpacing;
     
-    // Với nhẫn có mặt to ở trên, khắc chữ nằm ở cạnh bên hoặc dưới
     const startAngle = (ringStyle === 'gemstone' || ringStyle === 'star') && !isInside 
       ? (Math.PI) - direction * (totalArc / 2) 
       : (3 * Math.PI / 2) - direction * (totalArc / 2); 
@@ -141,26 +151,9 @@ const Ring = ({ engravingText, material, finish, positionType, fontSize, ringSty
   const materialProps = { silver: { color: '#e6e8fa' }, gold: { color: '#ffd700' } };
   const finishProps = { smooth: { roughness: 0.12, metalness: 1, clearcoat: 0.3 }, matte: { roughness: 0.35, metalness: 0.85, clearcoat: 0.05 } };
 
-  // Tạo hình 2D cho ngôi sao
-  const starShape = useMemo(() => {
-    const shape = new THREE.Shape();
-    const outerRadius = 0.35;
-    const innerRadius = 0.15;
-    for (let i = 0; i < 10; i++) {
-      const r = i % 2 === 0 ? outerRadius : innerRadius;
-      const a = (i / 10) * Math.PI * 2 + Math.PI / 2;
-      if (i === 0) shape.moveTo(Math.cos(a) * r, Math.sin(a) * r);
-      else shape.lineTo(Math.cos(a) * r, Math.sin(a) * r);
-    }
-    return shape;
-  }, []);
-
-const renderGeometry = () => {
+  const renderGeometry = () => {
     const baseMat = <meshPhysicalMaterial {...materialProps[material]} {...finishProps[finish]} />;
     const hammeredMat = <meshPhysicalMaterial {...materialProps[material]} {...finishProps[finish]} flatShading={true} />;
-    
-    // Đá Opal/Gemstone phản quang
-    const gemMat = <meshPhysicalMaterial color={material === 'gold' ? '#ffffff' : '#f8e8e8'} transmission={0.6} opacity={1} transparent roughness={0.1} ior={1.5} iridescence={1} iridescenceIOR={1.5} clearcoat={1} />;
 
     switch (ringStyle) {
       case 'flat':
@@ -168,35 +161,32 @@ const renderGeometry = () => {
       case 'thick':
         return <Torus args={[1, 0.08, 64, 128]} scale={[1, 1, 8]}>{baseMat}</Torus>;
       case 'hammered':
-        // Vân búa: Giảm số mặt (segments) và dùng flatShading để tạo các mặt gò búa
         return <Torus args={[1, 0.045, 8, 24]} scale={[1, 1, 8]}>{hammeredMat}</Torus>;
       case 'gemstone':
-        // Nhẫn gắn đá Opal/Diamond
+        // Đổi model Gemstone sang dạng mặt cắt Kim cương (Octahedron) ổn định hơn, không bị lỗi tàng hình
         return (
           <group>
             <Torus args={[1, 0.045, 64, 128]} scale={[1, 1, 8]}>{baseMat}</Torus>
-            {/* Chấu giữ đá: Đẩy lên Y=1.05 để nằm trên bề mặt */}
-            <mesh position={[0, 1.05, 0]}><cylinderGeometry args={[0.2, 0.15, 0.15, 32]} />{baseMat}</mesh>
-            {/* Viên đá: Đẩy lên Y=1.2 để nổi hẳn lên trên chấu */}
-            <mesh position={[0, 1.3, 0]}><sphereGeometry args={[0.25, 32, 32]} />{gemMat}</mesh>
+            {/* Chấu giữ */}
+            <mesh position={[0, 1.05, 0]}><cylinderGeometry args={[0.15, 0.1, 0.15, 32]} />{baseMat}</mesh>
+            {/* Đá cắt giác kim cương */}
+            <mesh position={[0, 1.25, 0]}>
+              <octahedronGeometry args={[0.22, 0]} />
+              <meshPhysicalMaterial color={material === 'gold' ? '#ffffff' : '#e0fbfc'} roughness={0.1} metalness={0.5} clearcoat={1} />
+            </mesh>
           </group>
         );
       case 'star':
-        // Nhẫn mặt ngôi sao
         return (
           <group>
             <Torus args={[1, 0.045, 64, 128]} scale={[1, 1, 8]}>{baseMat}</Torus>
-            {/* Chấu giữ: Đẩy lên Y=1.05 */}
             <mesh position={[0, 1.05, 0]}><cylinderGeometry args={[0.15, 0.1, 0.15, 32]} />{baseMat}</mesh>
-            {/* Hình ngôi sao: Đẩy lên Y=1.15 để tránh phần thừa đâm ngược vào trong */}
-            <mesh position={[0, 1.15, 0]} rotation={[Math.PI / 2, 0, 0]}>
-              <extrudeGeometry args={[starShape, { depth: 0.1, bevelEnabled: true, bevelSegments: 2, steps: 2, bevelSize: 0.02, bevelThickness: 0.02 }]} />
+            <mesh position={[0, 1.2, 0]} rotation={[Math.PI / 2, 0, 0]}>
+              <extrudeGeometry args={[globalStarShape, { depth: 0.1, bevelEnabled: true, bevelSegments: 2, steps: 2, bevelSize: 0.02, bevelThickness: 0.02 }]} />
               {baseMat}
             </mesh>
           </group>
         );
-      case 'slim':
-        return <Torus args={[1, 0.02, 64, 128]} scale={[1, 1, 8]}>{baseMat}</Torus>;
       case 'classic':
       default:
         return <Torus args={[1, 0.045, 64, 128]} scale={[1, 1, 8]}>{baseMat}</Torus>;
@@ -205,7 +195,10 @@ const renderGeometry = () => {
 
   return (
     <group rotation={ringStyle === 'flat' ? [-Math.PI / 2, 0, Math.PI / 4] : [-Math.PI / 2, 0, 0]}>
-      {renderGeometry()}
+      {/* Khóa key={ringStyle} ép Threejs render mới lại toàn bộ, khắc phục dứt điểm 100% lỗi mất hình */}
+      <group key={ringStyle}>
+        {renderGeometry()}
+      </group>
       <group rotation={ringStyle === 'flat' ? [0, 0, -Math.PI / 4] : [0, 0, 0]}>
         <CurvedEngraving text={engravingText} material={material} finish={finish} positionType={positionType} fontSize={fontSize} ringStyle={ringStyle} />
       </group>
@@ -258,7 +251,6 @@ const StickyHeader = () => {
       <Space size="middle" style={{ color: '#444' }}>
         <FacebookFilled style={{ fontSize: '18px', cursor: 'pointer' }} />
         <InstagramFilled style={{ fontSize: '18px', cursor: 'pointer' }} />
-        <MessageCircle size={18} cursor="pointer" />
         <Divider type="vertical" />
         <Search size={20} cursor="pointer" />
       </Space>
@@ -426,16 +418,15 @@ export default function App() {
       </div>
 
       {/* ========================================== */}
-      {/* 3D CONFIGURATOR VÀ BOOKING NẰM CHUNG MÀN HÌNH (GOM GỌN HOÀN TOÀN) */}
+      {/* 3D CONFIGURATOR KHU VỰC THIẾT KẾ NHẪN (1 MÀN HÌNH) */}
       {/* ========================================== */}
       <motion.section
         id="configurator-section"
         initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.1 }} variants={sectionVariants}
-        style={{ maxWidth: '1400px', margin: '0 auto 100px auto', padding: '0 3%' }}
+        style={{ maxWidth: '1400px', margin: '0 auto 80px auto', padding: '0 3%' }}
       >
         <div style={{ background: '#fff', borderRadius: '32px', padding: '24px', boxShadow: '0 20px 60px rgba(0,0,0,0.04)', display: 'flex', flexWrap: 'wrap', gap: '24px', alignItems: 'stretch' }}>
           
-          {/* CỘT TRÁI (3D & Hành trình) */}
           <div style={{ flex: '1.5 1 450px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ flex: 1, minHeight: '350px', background: 'linear-gradient(to bottom right, #fcfcfc, #FDF2F8)', borderRadius: '24px', overflow: 'hidden', position: 'relative', border: '1px solid #f0f0f0' }}>
               <Canvas camera={{ position: [0, 3, 6], fov: 45 }}>
@@ -463,7 +454,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* CỘT PHẢI (Options & Booking GOM GỌN CHUNG 1 KHUNG) */}
           <div style={{ flex: '1 1 450px', display: 'flex', flexDirection: 'column' }}>
             <Title level={2} style={{ fontSize: '1.8rem', margin: '0 0 16px 0', color: '#2c2c2c', fontFamily: 'Playfair Display, serif' }}>
               Made by <span style={{ color: '#e69a9d', fontStyle: 'italic' }}>You</span>, Meant for <span style={{ color: '#880e4f', fontStyle: 'italic' }}>You</span>
@@ -517,13 +507,13 @@ export default function App() {
               </Col>
             </Row>
 
-            <div style={{ marginBottom: '16px' }}>
+            <div style={{ marginBottom: '12px' }}>
               <Input placeholder="Type your message to engrave..." value={engravingText} onChange={(e) => setEngravingText(e.target.value)} style={{ borderRadius: '8px', padding: '8px 12px', fontSize: '1rem', backgroundColor: '#fafafa', border: '1px solid #ddd', fontFamily: 'inherit' }} maxLength={20} />
             </div>
 
-            <Divider style={{ margin: '8px 0 16px 0' }} />
+            <Divider style={{ margin: '8px 0' }} />
 
-            {/* FORM ĐẶT LỊCH NẰM GỌN BÊN DƯỚI, KHÔNG CẦN CUỘN THÊM */}
+            {/* FORM ĐẶT LỊCH GOM GỌN CHUNG 1 BẢNG CHỨ KHÔNG ĐỂ DƯỚI NỮA */}
             <Row gutter={12} style={{ marginBottom: '16px' }}>
               <Col span={9}>
                 <AntText strong style={{ display: 'block', marginBottom: '6px', color: '#888', letterSpacing: '1px', textTransform: 'uppercase', fontSize: '0.75rem', fontFamily: 'Lato' }}>Select Date</AntText>
@@ -564,8 +554,47 @@ export default function App() {
               CONFIRM BOOKING
             </Button>
           </div>
-
         </div>
+      </motion.section>
+
+      {/* ========================================== */}
+      {/* POST-WORKSHOP PACKAGE SECTION (DÙNG ICON ANT DESIGN) */}
+      {/* ========================================== */}
+      <motion.section
+        initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={sectionVariants}
+        style={{ maxWidth: '1200px', margin: '0 auto 100px auto', padding: '0 5%', textAlign: 'center' }}
+      >
+        <Title level={2} style={{ fontSize: '3rem', marginBottom: '10px', color: '#2c2c2c', fontFamily: 'Playfair Display, serif' }}>
+          Post-workshop <span style={{ color: '#e69a9d', fontStyle: 'italic' }}>Package</span>
+        </Title>
+        <Paragraph style={{ fontSize: '1.2rem', color: '#666', marginBottom: '40px', fontFamily: 'Lato, sans-serif' }}>
+          Every piece creates a story and We are the memory-keeper.
+        </Paragraph>
+
+        <Row gutter={[30, 30]} justify="center">
+          <Col xs={24} md={12}>
+            <div style={{ background: '#fff', borderRadius: '24px', padding: '40px 20px', boxShadow: '0 10px 30px rgba(0,0,0,0.04)', border: '1px solid #f0f0f0', height: '100%' }}>
+              <div style={{ marginBottom: '20px' }}>
+                <BookOutlined style={{ fontSize: '48px', color: '#880e4f' }} />
+              </div>
+              <Title level={4} style={{ color: '#880e4f', fontFamily: 'Playfair Display, serif' }}>D-Dreamer Story Passport</Title>
+              <Paragraph style={{ color: '#666', fontSize: '1.05rem', fontFamily: 'Lato, sans-serif' }}>
+                Document your creative journey. A personalized booklet to keep your workshop memories alive.
+              </Paragraph>
+            </div>
+          </Col>
+          <Col xs={24} md={12}>
+            <div style={{ background: '#FDF2F8', borderRadius: '24px', padding: '40px 20px', boxShadow: '0 10px 30px rgba(230,154,157,0.1)', border: '1px solid rgba(230,154,157,0.3)', height: '100%' }}>
+              <div style={{ marginBottom: '20px' }}>
+                <IdcardOutlined style={{ fontSize: '48px', color: '#880e4f' }} />
+              </div>
+              <Title level={4} style={{ color: '#880e4f', fontFamily: 'Playfair Display, serif' }}>DDreamers Club Card</Title>
+              <Paragraph style={{ color: '#666', fontSize: '1.05rem', fontFamily: 'Lato, sans-serif' }}>
+                Unlock exclusive perks, lifetime warranty, and special discounts for your next visits.
+              </Paragraph>
+            </div>
+          </Col>
+        </Row>
       </motion.section>
 
       {/* SHOWCASE SECTION */}
