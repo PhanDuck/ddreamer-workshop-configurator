@@ -30,7 +30,7 @@ import logoImg from './assets/Ddreamer-Jewelry-Ddreamer-Studio-1.png';
 const { Title, Paragraph, Text: AntText } = Typography;
 
 // ==========================================
-// DATA & MOCK TIME
+// DATA & MOCK TIME & PRICING
 // ==========================================
 const reviewsData = [
   { id: 1, name: "Chloe G.", date: "2 weeks ago", avatar: "https://i.pravatar.cc/150?img=1", content: "A truly aesthetic and meaningful experience! My boyfriend and I made our anniversary rings here. The studio vibe is immaculate.", rating: 5 },
@@ -64,6 +64,13 @@ const passportDetails = [
   { icon: <Users size={16} />, label: "Artisan / Helper", value: "Linh" },
   { icon: <Camera size={16} />, label: "Photo album", value: "ddreamer.com/memory" },
 ];
+
+// Mock Pricing Constants
+const RING_WEIGHTS = { classic: 2.0, flat: 3.0, thick: 5.0, hammered: 2.5, gemstone: 3.5, star: 3.0 };
+const WORKSHOP_FEE_VND = 500000; 
+const SILVER_PRICE_PER_PURE_GRAM_VND = 120000; 
+const GOLD_PRICE_PER_GRAM_VND = 1500000; 
+const USD_RATE = 25000;
 
 // ==========================================
 // HIỆU ỨNG BẮN PHÁO HOA TOÀN MÀN HÌNH
@@ -323,6 +330,18 @@ export default function App() {
   const SOLD_OUT_SLOT = '02:00 PM';
   const isTimeSlotSoldOut = (time) => selectedDate && time === SOLD_OUT_SLOT;
 
+  // Tính toán Pricing
+  const currentRingWeight = RING_WEIGHTS[ringStyle] || 2.0;
+  const pureSilverWeight = currentRingWeight * 0.925; 
+  
+  const materialCostVND = material === 'silver' 
+    ? pureSilverWeight * SILVER_PRICE_PER_PURE_GRAM_VND 
+    : currentRingWeight * GOLD_PRICE_PER_GRAM_VND;
+  const totalCostVND = WORKSHOP_FEE_VND + materialCostVND;
+
+  const formatVND = (amount) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+  const formatUSD = (amountVND) => `$${(amountVND / USD_RATE).toFixed(2)}`;
+
   const handleDateChange = (date) => {
     setSelectedDate(date);
     setSelectedTime(null);
@@ -360,10 +379,10 @@ export default function App() {
       <div 
         onClick={() => setter(value)}
         style={{
-          flex: 1, padding: '10px 4px', textAlign: 'center', borderRadius: '8px', cursor: 'pointer',
-          fontFamily: 'Lato, sans-serif', fontWeight: isActive ? '700' : '500', fontSize: '0.9rem', transition: 'all 0.3s ease',
+          flex: 1, padding: '6px 4px', textAlign: 'center', borderRadius: '6px', cursor: 'pointer',
+          fontFamily: 'Lato, sans-serif', fontWeight: isActive ? '700' : '500', fontSize: '0.85rem', transition: 'all 0.3s ease',
           backgroundColor: isActive ? '#FDF2F8' : '#ffffff', color: isActive ? '#880e4f' : '#666666', border: isActive ? '1px solid #e69a9d' : '1px solid #dddddd',
-          boxShadow: isActive ? '0 4px 12px rgba(230, 154, 157, 0.2)' : 'none'
+          boxShadow: isActive ? '0 2px 8px rgba(230, 154, 157, 0.2)' : 'none'
         }}
       >
         {label}
@@ -426,17 +445,17 @@ export default function App() {
       </div>
 
       {/* ========================================== */}
-      {/* 3D CONFIGURATOR KHU VỰC THIẾT KẾ NHẪN */}
+      {/* 3D CONFIGURATOR KHU VỰC THIẾT KẾ NHẪN (COMPACT MODE) */}
       {/* ========================================== */}
       <motion.section
         id="configurator-section"
         initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.1 }} variants={sectionVariants}
-        style={{ maxWidth: '1400px', margin: '0 auto 80px auto', padding: '0 3%' }}
+        style={{ maxWidth: '1300px', margin: '0 auto 60px auto', padding: '0 2%' }}
       >
-        <div style={{ background: '#fff', borderRadius: '32px', padding: '24px', boxShadow: '0 20px 60px rgba(0,0,0,0.04)', display: 'flex', flexWrap: 'wrap', gap: '24px', alignItems: 'stretch' }}>
+        <div style={{ background: '#fff', borderRadius: '24px', padding: '16px', boxShadow: '0 10px 40px rgba(0,0,0,0.05)', display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'stretch' }}>
           
-          <div style={{ flex: '1.5 1 450px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ flex: 1, minHeight: '350px', background: 'linear-gradient(to bottom right, #fcfcfc, #FDF2F8)', borderRadius: '24px', overflow: 'hidden', position: 'relative', border: '1px solid #f0f0f0' }}>
+          <div style={{ flex: '1.2 1 350px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ flex: 1, minHeight: '300px', background: 'linear-gradient(to bottom right, #fcfcfc, #FDF2F8)', borderRadius: '20px', overflow: 'hidden', position: 'relative', border: '1px solid #f0f0f0' }}>
               <Canvas camera={{ position: [0, 3, 6], fov: 45 }}>
                 <Environment preset="studio" />
                 <ambientLight intensity={0.6} />
@@ -447,28 +466,28 @@ export default function App() {
               </Canvas>
             </div>
 
-            <div style={{ background: '#fafafa', padding: '16px', borderRadius: '20px', border: '1px dashed #e69a9d' }}>
+            <div style={{ background: '#fafafa', padding: '12px', borderRadius: '16px', border: '1px dashed #e69a9d' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <Title level={5} style={{ margin: 0, fontFamily: 'inherit', color: '#880e4f' }}>The Journey of Your Ring</Title>
-                <div style={{ background: '#FDF2F8', padding: '4px 12px', borderRadius: '16px', color: '#880e4f', fontWeight: 'bold', fontSize: '0.85rem', fontFamily: 'Lato' }}>
+                <Title level={5} style={{ margin: 0, fontFamily: 'inherit', color: '#880e4f', fontSize: '1rem' }}>The Journey of Your Ring</Title>
+                <div style={{ background: '#FDF2F8', padding: '2px 10px', borderRadius: '12px', color: '#880e4f', fontWeight: 'bold', fontSize: '0.8rem', fontFamily: 'Lato' }}>
                   Total: {journeyTimes[ringStyle].total}
                 </div>
               </div>
-              <Row gutter={16}>
-                <Col span={8}><AntText strong style={{ color: '#555', fontFamily: 'inherit', fontSize: '0.85rem' }}>1. Design</AntText><br/><AntText type="secondary" style={{fontSize: '0.8rem'}}>{journeyTimes[ringStyle].design}</AntText></Col>
-                <Col span={8}><AntText strong style={{ color: '#e69a9d', fontFamily: 'inherit', fontSize: '0.85rem' }}>2. Craft</AntText><br/><AntText type="secondary" style={{fontSize: '0.8rem'}}>{journeyTimes[ringStyle].craft}</AntText></Col>
-                <Col span={8}><AntText strong style={{ color: '#555', fontFamily: 'inherit', fontSize: '0.85rem' }}>3. Polish</AntText><br/><AntText type="secondary" style={{fontSize: '0.8rem'}}>{journeyTimes[ringStyle].polish}</AntText></Col>
+              <Row gutter={8}>
+                <Col span={8}><AntText strong style={{ color: '#555', fontFamily: 'inherit', fontSize: '0.8rem' }}>1. Design</AntText><br/><AntText type="secondary" style={{fontSize: '0.75rem'}}>{journeyTimes[ringStyle].design}</AntText></Col>
+                <Col span={8}><AntText strong style={{ color: '#e69a9d', fontFamily: 'inherit', fontSize: '0.8rem' }}>2. Craft</AntText><br/><AntText type="secondary" style={{fontSize: '0.75rem'}}>{journeyTimes[ringStyle].craft}</AntText></Col>
+                <Col span={8}><AntText strong style={{ color: '#555', fontFamily: 'inherit', fontSize: '0.8rem' }}>3. Polish</AntText><br/><AntText type="secondary" style={{fontSize: '0.75rem'}}>{journeyTimes[ringStyle].polish}</AntText></Col>
               </Row>
             </div>
           </div>
 
-          <div style={{ flex: '1 1 450px', display: 'flex', flexDirection: 'column' }}>
-            <Title level={2} style={{ fontSize: '1.8rem', margin: '0 0 16px 0', color: '#2c2c2c', fontFamily: 'Playfair Display, serif' }}>
+          <div style={{ flex: '1 1 400px', display: 'flex', flexDirection: 'column' }}>
+            <Title level={2} style={{ fontSize: '1.5rem', margin: '0 0 10px 0', color: '#2c2c2c', fontFamily: 'Playfair Display, serif' }}>
               Made by <span style={{ color: '#e69a9d', fontStyle: 'italic' }}>You</span>, Meant for <span style={{ color: '#880e4f', fontStyle: 'italic' }}>You</span>
             </Title>
 
-            <div style={{ marginBottom: '12px' }}>
-              <AntText strong style={{ display: 'block', marginBottom: '6px', color: '#888', letterSpacing: '1px', textTransform: 'uppercase', fontSize: '0.75rem', fontFamily: 'Lato' }}>Ring Style</AntText>
+            <div style={{ marginBottom: '8px' }}>
+              <AntText strong style={{ display: 'block', marginBottom: '4px', color: '#888', letterSpacing: '1px', textTransform: 'uppercase', fontSize: '0.7rem', fontFamily: 'Lato' }}>Ring Style</AntText>
               <div style={{ display: 'flex', gap: '6px', marginBottom: '6px' }}>
                 {renderOptionButton('classic', ringStyle, setRingStyle, 'Classic')}
                 {renderOptionButton('flat', ringStyle, setRingStyle, 'Flat Edge')}
@@ -481,16 +500,16 @@ export default function App() {
               </div>
             </div>
 
-            <Row gutter={12} style={{ marginBottom: '12px' }}>
+            <Row gutter={12} style={{ marginBottom: '8px' }}>
               <Col span={12}>
-                <AntText strong style={{ display: 'block', marginBottom: '6px', color: '#888', letterSpacing: '1px', textTransform: 'uppercase', fontSize: '0.75rem', fontFamily: 'Lato' }}>Material</AntText>
+                <AntText strong style={{ display: 'block', marginBottom: '4px', color: '#888', letterSpacing: '1px', textTransform: 'uppercase', fontSize: '0.7rem', fontFamily: 'Lato' }}>Material</AntText>
                 <div style={{ display: 'flex', gap: '6px' }}>
                   {renderOptionButton('silver', material, setMaterial, 'Silver')}
                   {renderOptionButton('gold', material, setMaterial, 'Gold')}
                 </div>
               </Col>
               <Col span={12}>
-                <AntText strong style={{ display: 'block', marginBottom: '6px', color: '#888', letterSpacing: '1px', textTransform: 'uppercase', fontSize: '0.75rem', fontFamily: 'Lato' }}>Finish</AntText>
+                <AntText strong style={{ display: 'block', marginBottom: '4px', color: '#888', letterSpacing: '1px', textTransform: 'uppercase', fontSize: '0.7rem', fontFamily: 'Lato' }}>Finish</AntText>
                 <div style={{ display: 'flex', gap: '6px' }}>
                   {renderOptionButton('smooth', finish, setFinish, 'Smooth')}
                   {renderOptionButton('matte', finish, setFinish, 'Matte')}
@@ -498,37 +517,60 @@ export default function App() {
               </Col>
             </Row>
 
-            <Row gutter={12} style={{ marginBottom: '12px' }}>
+            <Row gutter={12} style={{ marginBottom: '8px' }}>
               <Col span={12}>
-                <AntText strong style={{ display: 'block', marginBottom: '6px', color: '#888', letterSpacing: '1px', textTransform: 'uppercase', fontSize: '0.75rem', fontFamily: 'Lato' }}>Engraving Position</AntText>
+                <AntText strong style={{ display: 'block', marginBottom: '4px', color: '#888', letterSpacing: '1px', textTransform: 'uppercase', fontSize: '0.7rem', fontFamily: 'Lato' }}>Position</AntText>
                 <div style={{ display: 'flex', gap: '6px' }}>
                   {renderOptionButton('outside', engravePosition, setEngravePosition, 'Outer')}
                   {renderOptionButton('inside', engravePosition, setEngravePosition, 'Inner')}
                 </div>
               </Col>
               <Col span={12}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
-                  <AntText strong style={{ color: '#888', letterSpacing: '1px', textTransform: 'uppercase', fontSize: '0.75rem', fontFamily: 'Lato' }}>Text Size</AntText>
-                  <AntText strong style={{ color: '#e69a9d', fontSize: '0.8rem' }}>{Math.round(fontSize * 100)}</AntText>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0px' }}>
+                  <AntText strong style={{ color: '#888', letterSpacing: '1px', textTransform: 'uppercase', fontSize: '0.7rem', fontFamily: 'Lato' }}>Text Size</AntText>
+                  <AntText strong style={{ color: '#e69a9d', fontSize: '0.75rem' }}>{Math.round(fontSize * 100)}</AntText>
                 </div>
-                <Slider min={0.06} max={0.28} step={0.01} value={fontSize} onChange={setFontSize} trackStyle={{ backgroundColor: '#e69a9d' }} handleStyle={{ borderColor: '#e69a9d' }} style={{ margin: '8px 0' }} />
+                <Slider min={0.06} max={0.28} step={0.01} value={fontSize} onChange={setFontSize} trackStyle={{ backgroundColor: '#e69a9d' }} handleStyle={{ borderColor: '#e69a9d' }} style={{ margin: '6px 0' }} />
               </Col>
             </Row>
 
-            <div style={{ marginBottom: '12px' }}>
-              <Input placeholder="Type your message to engrave..." value={engravingText} onChange={(e) => setEngravingText(e.target.value)} style={{ borderRadius: '8px', padding: '8px 12px', fontSize: '1rem', backgroundColor: '#fafafa', border: '1px solid #ddd', fontFamily: 'inherit' }} maxLength={20} />
+            <div style={{ marginBottom: '10px' }}>
+              <Input placeholder="Type your message..." value={engravingText} onChange={(e) => setEngravingText(e.target.value)} style={{ borderRadius: '6px', padding: '6px 12px', fontSize: '0.9rem', backgroundColor: '#fafafa', border: '1px solid #ddd', fontFamily: 'inherit' }} maxLength={20} />
             </div>
 
-            <Divider style={{ margin: '8px 0' }} />
+            {/* ESTIMATED COST SUMMARY BOX - COMPACT & ALIGNED WEIGHT */}
+            <div style={{ background: '#FDF2F8', padding: '12px', borderRadius: '10px', marginBottom: '10px', border: '1px solid #fce4ec' }}>
+              <Title level={5} style={{ margin: '0 0 8px 0', color: '#880e4f', fontSize: '0.9rem', fontFamily: 'Lato, sans-serif' }}>Estimated Cost</Title>
+              
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <AntText style={{ color: '#666', fontSize: '0.75rem' }}>Workshop Fee</AntText>
+                <AntText strong style={{ color: '#444', fontSize: '0.75rem' }}>{formatVND(WORKSHOP_FEE_VND)} <span style={{color: '#999', fontWeight: 'normal'}}>({formatUSD(WORKSHOP_FEE_VND)})</span></AntText>
+              </div>
 
-            <Row gutter={12} style={{ marginBottom: '16px' }}>
-              <Col span={9}>
-                <AntText strong style={{ display: 'block', marginBottom: '6px', color: '#888', letterSpacing: '1px', textTransform: 'uppercase', fontSize: '0.75rem', fontFamily: 'Lato' }}>Select Date</AntText>
-                <DatePicker onChange={handleDateChange} disabledDate={disabledDate} style={{ width: '100%', height: '38px', borderRadius: '8px', border: '1px solid #ddd', fontFamily: 'Lato' }} placeholder="Pick Date" />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', alignItems: 'center' }}>
+                <AntText style={{ color: '#666', fontSize: '0.75rem' }}>Material</AntText>
+                <div style={{ textAlign: 'right' }}>
+                  <AntText style={{ color: '#880e4f', fontSize: '0.7rem', marginRight: '6px', fontStyle: 'italic' }}>
+                    {material === 'silver' ? `~${pureSilverWeight.toFixed(2)}g Silver` : `~${currentRingWeight}g Gold`}
+                  </AntText>
+                  <AntText strong style={{ color: '#444', fontSize: '0.75rem' }}>
+                    {formatVND(materialCostVND)} <span style={{color: '#999', fontWeight: 'normal'}}>({formatUSD(materialCostVND)})</span>
+                  </AntText>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #f8bbd0', paddingTop: '6px' }}>
+                <AntText strong style={{ color: '#880e4f', fontSize: '0.9rem' }}>Total</AntText>
+                <AntText strong style={{ color: '#880e4f', fontSize: '0.95rem' }}>{formatVND(totalCostVND)} <span style={{color: '#d81b60', fontWeight: 'normal', fontSize: '0.8rem'}}>({formatUSD(totalCostVND)})</span></AntText>
+              </div>
+            </div>
+
+            <Row gutter={12} style={{ marginBottom: '12px' }}>
+              <Col span={10}>
+                <DatePicker onChange={handleDateChange} disabledDate={disabledDate} style={{ width: '100%', height: '36px', borderRadius: '6px', border: '1px solid #ddd', fontFamily: 'Lato', fontSize: '0.8rem' }} placeholder="Date" />
               </Col>
-              <Col span={15}>
-                <AntText strong style={{ display: 'block', marginBottom: '6px', color: '#888', letterSpacing: '1px', textTransform: 'uppercase', fontSize: '0.75rem', fontFamily: 'Lato' }}>Select Time</AntText>
-                <div style={{ display: 'flex', gap: '6px' }}>
+              <Col span={14}>
+                <div style={{ display: 'flex', gap: '4px' }}>
                   {timeSlots.map((time) => {
                     const soldOut = isTimeSlotSoldOut(time);
                     const isSelected = selectedTime === time;
@@ -536,7 +578,7 @@ export default function App() {
                       <Button 
                         key={time} onClick={() => !soldOut && setSelectedTime(time)} disabled={soldOut} 
                         style={{ 
-                          flex: 1, padding: 0, height: '38px', borderRadius: '8px', fontFamily: 'Lato, sans-serif', fontSize: '0.8rem',
+                          flex: 1, padding: 0, height: '36px', borderRadius: '6px', fontFamily: 'Lato, sans-serif', fontSize: '0.75rem',
                           background: soldOut ? '#f0f0f0' : (isSelected ? '#FDF2F8' : '#fff'), color: soldOut ? '#aaa' : (isSelected ? '#880e4f' : '#444'),         
                           borderColor: soldOut ? '#f0f0f0' : (isSelected ? '#e69a9d' : '#ddd'),
                           fontWeight: isSelected ? '700' : '500', transition: 'all 0.3s'
@@ -554,8 +596,8 @@ export default function App() {
               size="large" disabled={!selectedDate || !selectedTime} onClick={handleConfirmBooking}
               style={{ 
                 marginTop: 'auto', background: (!selectedDate || !selectedTime) ? '#e0e0e0' : 'linear-gradient(135deg, #e69a9d 0%, #f06292 100%)', 
-                color: (!selectedDate || !selectedTime) ? '#999' : '#fff', border: 'none', height: '54px', fontSize: '1.1rem', borderRadius: '12px', fontWeight: '700', letterSpacing: '1px', fontFamily: 'inherit',
-                boxShadow: (!selectedDate || !selectedTime) ? 'none' : '0 10px 20px rgba(230, 154, 157, 0.4)'
+                color: (!selectedDate || !selectedTime) ? '#999' : '#fff', border: 'none', height: '48px', fontSize: '1rem', borderRadius: '8px', fontWeight: '700', letterSpacing: '1px', fontFamily: 'inherit',
+                boxShadow: (!selectedDate || !selectedTime) ? 'none' : '0 6px 15px rgba(230, 154, 157, 0.3)'
               }}
             >
               CONFIRM BOOKING
@@ -783,7 +825,7 @@ export default function App() {
         </div>
       </motion.section>
 
-      {/* POPUP XÁC NHẬN */}
+      {/* POPUP XÁC NHẬN CÓ GIÁ TIỀN */}
       <Modal
         title={null} open={isModalOpen} onCancel={() => setIsModalOpen(false)} footer={null} width={700} centered closeIcon={false}
         styles={{ body: { padding: 0, borderRadius: '24px', overflow: 'hidden' } }}
@@ -812,10 +854,16 @@ export default function App() {
             <div style={{ flex: 2, background: '#fafafa', padding: '20px', borderRadius: '20px', border: '1px solid #eee' }}>
               <Title level={5} style={{ margin: '0 0 16px 0', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '0.85rem', fontFamily: 'Lato, sans-serif' }}>Your Custom Blueprint</Title>
               <Row justify="space-between" style={{ marginBottom: '10px' }}><AntText type="secondary" style={{fontFamily: 'Lato, sans-serif'}}>Ring Style</AntText><AntText strong style={{ textTransform: 'capitalize', fontFamily: 'Lato, sans-serif' }}>{ringStyle}</AntText></Row>
-              <Row justify="space-between" style={{ marginBottom: '10px' }}><AntText type="secondary" style={{fontFamily: 'Lato, sans-serif'}}>Material</AntText><AntText strong style={{fontFamily: 'Lato, sans-serif'}}>{material === 'silver' ? 'Silver 925' : 'Gold-plated'}</AntText></Row>
+              <Row justify="space-between" style={{ marginBottom: '10px' }}><AntText type="secondary" style={{fontFamily: 'Lato, sans-serif'}}>Material</AntText><AntText strong style={{fontFamily: 'Lato, sans-serif'}}>{material === 'silver' ? `Silver 925 (~${pureSilverWeight.toFixed(2)}g)` : `Gold-plated (~${currentRingWeight}g)`}</AntText></Row>
               <Row justify="space-between" style={{ marginBottom: '10px' }}><AntText type="secondary" style={{fontFamily: 'Lato, sans-serif'}}>Finish</AntText><AntText strong style={{fontFamily: 'Lato, sans-serif'}}>{finish === 'smooth' ? 'Smooth' : 'Satin Matte'}</AntText></Row>
               <Row justify="space-between" style={{ marginBottom: '10px' }}><AntText type="secondary" style={{fontFamily: 'Lato, sans-serif'}}>Placement</AntText><AntText strong style={{fontFamily: 'Lato, sans-serif'}}>{engravePosition === 'inside' ? 'Inner Band' : 'Outer Band'}</AntText></Row>
               <Row justify="space-between"><AntText type="secondary" style={{fontFamily: 'Lato, sans-serif'}}>Engraving</AntText><AntText strong style={{ fontStyle: 'italic', color: '#e69a9d', fontFamily: 'inherit' }}>"{engravingText}"</AntText></Row>
+              
+              {/* Thêm phần giá tiền vào Popup */}
+              <Row justify="space-between" style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #ddd' }}>
+                <AntText strong style={{fontFamily: 'Lato, sans-serif', fontSize: '1rem'}}>Estimated Total</AntText>
+                <AntText strong style={{ color: '#880e4f', fontFamily: 'inherit', fontSize: '1.1rem' }}>{formatVND(totalCostVND)} <span style={{fontSize: '0.9rem', color: '#999', fontWeight: 'normal'}}>({formatUSD(totalCostVND)})</span></AntText>
+              </Row>
             </div>
 
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
